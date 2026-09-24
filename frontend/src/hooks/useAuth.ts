@@ -8,6 +8,8 @@ interface User {
   company_name: string
   role: string
   subscription_plan: string | null
+  subscription_expires_at: string | null
+  demo_expires_at: string | null
 }
 
 export function useAuth() {

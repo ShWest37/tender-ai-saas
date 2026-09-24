@@ -84,9 +84,10 @@ export function HeroSlider() {
               >
                 {/* Иконка */}
                 <div className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br ${slides[currentSlide].color} mb-8 shadow-2xl`}>
-                  {slides[currentSlide].icon && (
-                    <slides.currentSlide.icon className="w-10 h-10 text-white" />
-                  )}
+                  {(() => {
+                    const Icon = slides[currentSlide].icon;
+                    return <Icon className="w-10 h-10 text-white" />;
+                  })()}
                 </div>
 
                 {/* Заголовок */}
@@ -128,11 +129,10 @@ export function HeroSlider() {
                 <button
                   key={index}
                   onClick={() => setCurrentSlide(index)}
-                  className={`h-3 rounded-full transition-all duration-300 ${
-                    index === currentSlide
+                  className={`h-3 rounded-full transition-all duration-300 ${index === currentSlide
                       ? "bg-blue-500 w-8"
                       : "bg-gray-300 hover:bg-gray-400 w-3"
-                  }`}
+                    }`}
                   aria-label={`Слайд ${index + 1}`}
                 />
               ))}
