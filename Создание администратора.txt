@@ -1,0 +1,21 @@
+docker compose exec backend python -c "
+import asyncio
+from app.db.session import AsyncSessionLocal
+from app.db.models import User, UserRole
+from app.core.security import get_password_hash
+
+async def create_admin():
+    async with AsyncSessionLocal() as db:
+        admin = User(
+            email='admin@bidflow.ru',
+            hashed_password=get_password_hash('ВАШ_ПАРОЛЬ'),
+            full_name='Admin',
+            role=UserRole.ADMIN,
+            is_active=True,
+        )
+        db.add(admin)
+        await db.commit()
+        print('Admin created!')
+
+asyncio.run(create_admin())
+"

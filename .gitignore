@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv-test/
+ENV/
+*.egg-info/
+.pytest_cache/
+.coverage
+
+# Node
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+.qodo/
+*.swp
+*.swo
+*~
+
+# Docker
+pgdata/
+prometheus_data/
+grafana_data/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# SSL
+nginx/ssl/*.pem
+nginx/ssl/*.key
+
+# Migrations (не игнорируем, но можно)
+# backend/alembic/versions/*.py
+
+# Testing
+htmlcov/
+.tox/

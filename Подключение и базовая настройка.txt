@@ -1,0 +1,15 @@
+# Подключаемся по SSH
+ssh root@YOUR_VPS_IP
+
+# Обновляем систему
+apt update && apt upgrade -y
+
+# Создаём пользователя
+adduser deploy
+usermod -aG sudo deploy
+
+# Настраиваем firewall
+ufw allow 22
+ufw allow 80
+ufw allow 443
+ufw enable

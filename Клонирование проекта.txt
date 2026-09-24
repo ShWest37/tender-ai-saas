@@ -1,0 +1,4 @@
+su - deploy
+cd /opt
+git clone git@github.com:YOUR_USER/tender-ai-saas.git
+cd tender-ai-saas

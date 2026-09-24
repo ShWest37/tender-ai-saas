@@ -1,0 +1,16 @@
+# Конфигурация Prometheus для docker-compose.
+# Целится в /metrics backend-сервиса и собирает метрики самого Prometheus.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "tender-ai-backend"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["backend:8000"]

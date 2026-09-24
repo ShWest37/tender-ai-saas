@@ -1,0 +1,13 @@
+# Провидер дашбордов Grafana: подхватывает JSON из /var/lib/grafana/dashboards.
+apiVersion: 1
+
+providers:
+  - name: "Tender AI Director"
+    orgId: 1
+    folder: ""
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

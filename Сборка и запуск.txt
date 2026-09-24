@@ -1,0 +1,13 @@
+# Сборка и запуск (образы из Docker Hub)
+
+# Образы backend/frontend собираются в GitHub Actions и публикуются в Docker Hub
+# (itech24/tender-ai-backend, itech24/tender-ai-frontend) — см. "CI-CD Docker Hub.txt"
+
+# 1. Скачать свежие образы
+docker compose pull
+
+# 2. Запустить все сервисы
+docker compose up -d
+
+# 3. Проверить статус
+docker compose ps

@@ -1,0 +1,131 @@
+services:
+  # === PostgreSQL с pgvector ===
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    command: >
+      postgres
+      -c shared_buffers=512MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=256MB
+      -c max_parallel_maintenance_workers=2
+
+  # === Redis ===
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # === Backend ===
+  # Образ собирается в GitHub Actions и публикуется в Docker Hub (itech24/tender-ai-backend)
+  # Тег можно переопределить переменной IMAGE_TAG (по умолчанию latest)
+  backend:
+    image: itech24/tender-ai-backend:${IMAGE_TAG:-latest}
+    restart: always
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # === Celery Worker ===
+  celery_worker:
+    image: itech24/tender-ai-backend:${IMAGE_TAG:-latest}
+    restart: always
+    env_file: .env
+    depends_on:
+      - redis
+      - postgres
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2
+
+  # === Celery Beat ===
+  celery_beat:
+    image: itech24/tender-ai-backend:${IMAGE_TAG:-latest}
+    restart: always
+    env_file: .env
+    depends_on:
+      - redis
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+
+  # === Frontend ===
+  # Образ собирается в GitHub Actions и публикуется в Docker Hub (itech24/tender-ai-frontend)
+  # NEXT_PUBLIC_API_URL вшивается в образ во время сборки в CI
+  frontend:
+    image: itech24/tender-ai-frontend:${IMAGE_TAG:-latest}
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  # === Nginx ===
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - backend
+      - frontend
+
+  # === Prometheus ===
+  prometheus:
+    image: prom/prometheus:latest
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+  # === Grafana ===
+  grafana:
+    image: grafana/grafana:10.3.1
+    restart: always
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana_data:/var/lib/grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin123}
+    depends_on:
+      - prometheus
+
+volumes:
+  pgdata:
+  prometheus_data:
+  grafana_data:

@@ -1,0 +1,2 @@
+# В этой папке leжат SSL-сертификаты (fullchain.pem / privkey.pem).
+# *.pem и *.key игнорируются git (см. .gitignore). Монтируется в /etc/nginx/ssl.

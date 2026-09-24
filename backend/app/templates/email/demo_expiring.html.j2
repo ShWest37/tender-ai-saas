@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Демо-доступ скоро заканчивается</title></head>
+<body style="font-family: Arial, sans-serif; color:#111827; max-width:600px; margin:0 auto; padding:24px;">
+  <h2 style="color:#d97706;">Демо-доступ скоро заканчивается</h2>
+  <p>Здравствуйте, {{ user.full_name or user.email }}!</p>
+  <p>Ваш демо-период завершается <b>{{ demo_expires_at }}</b>. Чтобы продолжить работу с тендерами, подключите подписку.</p>
+  <p style="margin-top:24px;">
+    <a href="{{ frontend_url }}/dashboard/billing" style="background:#2563eb;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;">
+      Выбрать тариф
+    </a>
+  </p>
+  <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0;">
+  <p style="color:#9ca3af;font-size:12px;">Tender AI Director — автоматизация тендеров</p>
+</body>
+</html>
