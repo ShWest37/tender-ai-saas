@@ -13,6 +13,7 @@ from app.api.routers import (
     decisions,
     notifications,
     payments,
+    platforms,
     suppliers,
     tenders,
 )
@@ -29,3 +30,5 @@ api_router.include_router(notifications.router, prefix="/notifications", tags=["
 api_router.include_router(ai.router, prefix="/ai", tags=["ai"])
 api_router.include_router(suppliers.router, prefix="/suppliers", tags=["suppliers"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
+api_router.include_router(platforms.admin_router, prefix="/admin/platforms", tags=["admin-platforms"])
+api_router.include_router(platforms.public_router, prefix="/platforms", tags=["platforms"])

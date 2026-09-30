@@ -20,6 +20,7 @@ import {
   ScrollText,
   Zap,
   PackageSearch,
+  Globe,
 } from 'lucide-react'
 import { LogoutButton } from '@/components/layout/LogoutButton'
 import { SubscriptionGate } from '@/components/SubscriptionGate'
@@ -27,6 +28,7 @@ import { SubscriptionGate } from '@/components/SubscriptionGate'
 const navItems = [
   { href: '/dashboard', label: 'Обзор', icon: LayoutDashboard },
   { href: '/dashboard/tenders', label: 'Тендеры', icon: FileText },
+  { href: '/dashboard/platforms', label: 'Тендерные площадки', icon: Globe },
   { href: '/dashboard/suppliers', label: 'Поставщики', icon: PackageSearch },
   { href: '/dashboard/ai-agent', label: 'AI-Агент', icon: Bot },
   { href: '/dashboard/ai-generation', label: 'AI-генерация', icon: Zap },

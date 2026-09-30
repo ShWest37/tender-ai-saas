@@ -278,6 +278,10 @@ class ParserConfig(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     platform_name = Column(String(100), unique=True)
+    # Человекочитаемое наименование для таблицы «Тендерные площадки»
+    name = Column(String(200), nullable=True)
+    # Адрес сайта площадки (api_url — это API-адрес, они различаются)
+    url = Column(String(500), nullable=True)
     is_active = Column(Boolean, default=True)
     api_url = Column(String(500), nullable=True)
     api_key = Column(String(500), nullable=True)

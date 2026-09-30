@@ -20,8 +20,8 @@ export default function ParsingPage() {
     setResults([]);
 
     try {
-      // Запускаем парсинг для всех площадок
-      const response = await api.post("/parser/run");
+      // Запускаем парсинг для всех площадок каталога
+      const response = await api.post("/admin/platforms/parse-all");
       setResults(response.data.results || []);
     } catch (error) {
       console.error("Error running parser:", error);

@@ -28,7 +28,12 @@ api.interceptors.response.use(
       if (typeof window !== 'undefined') {
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
-        window.location.href = '/auth/login'
+        const path = window.location.pathname
+        // Страница входа сама показывает ошибку — не перезагружаем её
+        if (path !== '/auth/login' && path !== '/admin/login') {
+          // В админке — страница авторизации администратора, в ЛК — общая
+          window.location.href = path.startsWith('/admin') ? '/admin/login' : '/auth/login'
+        }
       }
     }
     // Демо-период/подписка закончились: сообщаем кабинету, чтобы показать тарифы

@@ -1,23 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import {
-  Settings,
-  Bot,
-  CreditCard,
-  Mail,
-  Globe,
-  Play,
-  Activity,
-  Award,
-  Menu,
-  X,
-  Newspaper,
-  PackageSearch,
-} from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { Loader2, Settings, Bot, CreditCard, Mail, Globe, Play, Activity, Award, Menu, X, Newspaper, PackageSearch } from 'lucide-react'
 import { LogoutButton } from '@/components/layout/LogoutButton'
+import { api } from '@/lib/api'
 
 const navItems = [
   { href: '/admin', label: 'Обзор', icon: Activity },
@@ -26,14 +14,67 @@ const navItems = [
   { href: '/admin/ai-models', label: 'AI Модели', icon: Bot },
   { href: '/admin/subscriptions', label: 'Подписки', icon: CreditCard },
   { href: '/admin/support', label: 'Обращения', icon: Mail },
-  { href: '/admin/platforms', label: 'Площадки', icon: Globe },
+  { href: '/admin/platforms', label: 'Тендерные площадки', icon: Globe },
   { href: '/admin/parsing', label: 'Парсинг', icon: Play },
   { href: '/admin/articles', label: 'Статьи', icon: Newspaper },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  // Проверка прав: панель открывается только после входа администратора
+  const [ready, setReady] = useState(false)
+
+  const isLoginPage = pathname === '/admin/login'
+
+  useEffect(() => {
+    if (isLoginPage) {
+      setReady(true)
+      return
+    }
+    let cancelled = false
+
+    const verify = async () => {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+      if (!token) {
+        router.replace('/admin/login')
+        return
+      }
+      try {
+        const { data } = await api.get('/auth/me')
+        if (data?.role !== 'ADMIN') throw new Error('forbidden')
+        if (!cancelled) setReady(true)
+      } catch {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        if (!cancelled) router.replace('/admin/login?error=forbidden')
+      }
+    }
+    verify()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isLoginPage, pathname, router])
+
+  // Страница авторизации администратора — без сайдбара и без проверки
+  if (isLoginPage) return <>{children}</>
+
+  // Пока проверяем права — экран загрузки, чтобы контент не мигал
+  if (!ready) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center">
+            <Award className="w-7 h-7 text-white" />
+          </div>
+          <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+          <p className="text-sm text-gray-400">Проверяем права администратора…</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -105,7 +146,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Activity className="w-5 h-5" />
               <span className="font-medium">Кабинет</span>
             </Link>
-            <LogoutButton tone="dark" loginHref="/auth/login?logout=1" />
+            <LogoutButton tone="dark" loginHref="/admin/login?logout=1" />
           </div>
         </div>
       </aside>
