@@ -5,6 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bot, TrendingUp, Shield, Zap, Award } from "lucide-react";
 import { RegisterModal } from "@/components/modals/RegisterModal";
 
+/**
+ * Слайды главной (УТП). Каждый слайд поддержан картинкой по смыслу —
+ * локальные копии фотографий Unsplash (та же схема, что в блоге):
+ *   /images/hero/*.jpg — исходники: images.unsplash.com/photo-<id>
+ * Если картинка не загрузится, под ней остаётся цветной градиент слайда.
+ */
 const slides = [
   {
     icon: Bot,
@@ -14,6 +20,8 @@ const slides = [
     color: "from-blue-500 to-cyan-500",
     bgGradient: "from-blue-950 via-blue-900 to-cyan-950",
     pattern: "radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 40%)",
+    image: "/images/hero/ai-director.jpg",
+    scrim: 0.55,
   },
   {
     icon: Zap,
@@ -23,6 +31,8 @@ const slides = [
     color: "from-yellow-500 to-orange-500",
     bgGradient: "from-amber-950 via-orange-950 to-red-950",
     pattern: "radial-gradient(circle at 30% 70%, rgba(245, 158, 11, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 30%, rgba(239, 68, 68, 0.1) 0%, transparent 40%)",
+    image: "/images/hero/auto-generation.jpg",
+    scrim: 0.75,
   },
   {
     icon: Shield,
@@ -32,6 +42,8 @@ const slides = [
     color: "from-green-500 to-emerald-500",
     bgGradient: "from-emerald-950 via-green-950 to-teal-950",
     pattern: "radial-gradient(circle at 25% 60%, rgba(16, 185, 129, 0.15) 0%, transparent 50%), radial-gradient(circle at 75% 25%, rgba(20, 184, 166, 0.1) 0%, transparent 40%)",
+    image: "/images/hero/zero-errors.jpg",
+    scrim: 0.72,
   },
   {
     icon: TrendingUp,
@@ -41,6 +53,8 @@ const slides = [
     color: "from-purple-500 to-pink-500",
     bgGradient: "from-purple-950 via-violet-950 to-fuchsia-950",
     pattern: "radial-gradient(circle at 20% 40%, rgba(139, 92, 246, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 60%, rgba(217, 70, 239, 0.1) 0%, transparent 40%)",
+    image: "/images/hero/predictive-analytics.jpg",
+    scrim: 0.55,
   },
   {
     icon: Award,
@@ -50,6 +64,8 @@ const slides = [
     color: "from-red-500 to-rose-500",
     bgGradient: "from-rose-950 via-red-950 to-pink-950",
     pattern: "radial-gradient(circle at 30% 50%, rgba(244, 63, 94, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(236, 72, 153, 0.1) 0%, transparent 40%)",
+    image: "/images/hero/single-window.jpg",
+    scrim: 0.68,
   },
 ];
 
@@ -78,7 +94,7 @@ export function HeroSlider() {
         {/* Статичный тёмный фон */}
         <div className="absolute inset-0 bg-gray-950" />
 
-        {/* Фоновые слои с плавным переходом */}
+        {/* Фоновые слои: картинка по смыслу слайда поверх цветного градиента */}
         <AnimatePresence mode="sync">
           {slides.map((slide, index) => (
             <motion.div
@@ -88,9 +104,36 @@ export function HeroSlider() {
                 opacity: currentSlide === index ? 1 : 0,
               }}
               transition={{ duration: 0.8, ease: "easeInOut" }}
-              className={`absolute inset-0 bg-gradient-to-br ${slide.bgGradient}`}
+              className="absolute inset-0"
               style={{ zIndex: currentSlide === index ? 1 : 0 }}
             >
+              {/* Градиент — база и фолбэк, если картинка не загрузилась */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${slide.bgGradient}`} />
+
+              {/* Картинка по смыслу УТП (локальная копия Unsplash, как в блоге) */}
+              <img
+                src={slide.image}
+                alt=""
+                aria-hidden="true"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(event) => {
+                  // нет картинки — остаёмся на градиенте
+                  event.currentTarget.style.display = "none";
+                }}
+              />
+
+              {/* Цветовой оттенок слайда поверх фотографии */}
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${slide.bgGradient} opacity-40 mix-blend-color`}
+              />
+
+              {/* Затемнение под читаемость белого текста */}
+              <div
+                className="absolute inset-0"
+                style={{ backgroundColor: `rgba(2, 6, 23, ${slide.scrim})` }}
+              />
+
               {/* Паттерн */}
               <div className="absolute inset-0" style={{ background: slide.pattern }} />
             </motion.div>
