@@ -355,7 +355,12 @@ async def seed_blog():
             existing = result.scalar_one_or_none()
 
             if existing:
-                print(f"Статья '{article['title']}' уже существует, пропускаем")
+                # Старым статьям проставляем рубрику, если её не было
+                if not existing.category and article.get("category"):
+                    existing.category = article["category"]
+                    print(f"Рубрика добавлена: '{article['title']}' -> {article['category']}")
+                else:
+                    print(f"Статья '{article['title']}' уже существует, пропускаем")
                 continue
 
             # Создаём новую статью

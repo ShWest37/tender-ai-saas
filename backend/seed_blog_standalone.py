@@ -372,13 +372,21 @@ async def seed_blog():
         for article in ARTICLES:
             # Проверяем, существует ли статья
             result = await conn.execute(
-                text("SELECT id FROM blog_posts WHERE slug = :slug"),
+                text("SELECT id, category FROM blog_posts WHERE slug = :slug"),
                 {"slug": article["slug"]}
             )
             existing = result.fetchone()
 
             if existing:
-                print(f"Статья '{article['title']}' уже существует, пропускаем")
+                # Старым статьям проставляем рубрику, если её не было
+                if not existing[1] and article.get("category"):
+                    await conn.execute(
+                        text("UPDATE blog_posts SET category = :category WHERE id = :id"),
+                        {"category": article["category"], "id": existing[0]},
+                    )
+                    print(f"Рубрика добавлена: '{article['title']}' -> {article['category']}")
+                else:
+                    print(f"Статья '{article['title']}' уже существует, пропускаем")
                 continue
 
             # Создаём новую статью
