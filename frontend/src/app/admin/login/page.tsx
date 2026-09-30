@@ -32,6 +32,21 @@ export default function AdminLoginPage() {
       setError("Для входа нужна учётная запись администратора");
   }, []);
 
+  // Уже вошли администратором — сразу в панель, без повторного ввода
+  useEffect(() => {
+    const checkSession = async () => {
+      const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+      if (!token) return;
+      try {
+        const { data } = await api.get("/auth/me");
+        if (data?.role === "ADMIN") router.replace("/admin");
+      } catch {
+        // Протухший токен или не администратор — остаёмся на форме входа
+      }
+    };
+    checkSession();
+  }, [router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);

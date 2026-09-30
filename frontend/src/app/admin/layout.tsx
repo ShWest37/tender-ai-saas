@@ -43,12 +43,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
       try {
         const { data } = await api.get('/auth/me')
-        if (data?.role !== 'ADMIN') throw new Error('forbidden')
+        if (data?.role !== 'ADMIN') {
+          // Токен валиден, но прав нет: уходим на вход, не сбрасывая сессию пользователя
+          if (!cancelled) router.replace('/admin/login?error=forbidden')
+          return
+        }
         if (!cancelled) setReady(true)
       } catch {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
-        if (!cancelled) router.replace('/admin/login?error=forbidden')
+        // Невалидный токен (интерцептор уже убрал его) или сервер недоступен
+        if (!cancelled) router.replace('/admin/login')
       }
     }
     verify()
