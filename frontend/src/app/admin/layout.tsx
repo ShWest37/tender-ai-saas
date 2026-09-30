@@ -43,7 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
       try {
         const { data } = await api.get('/auth/me')
-        if (data?.role !== 'ADMIN') {
+        if (String(data?.role).toLowerCase() !== 'admin') {
           // Токен валиден, но прав нет: уходим на вход, не сбрасывая сессию пользователя
           if (!cancelled) router.replace('/admin/login?error=forbidden')
           return

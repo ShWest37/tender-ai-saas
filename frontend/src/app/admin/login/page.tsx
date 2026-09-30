@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
       if (!token) return;
       try {
         const { data } = await api.get("/auth/me");
-        if (data?.role === "ADMIN") router.replace("/admin");
+        if (String(data?.role).toLowerCase() === "admin") router.replace("/admin");
       } catch {
         // Протухший токен или не администратор — остаёмся на форме входа
       }
@@ -58,9 +58,9 @@ export default function AdminLoginPage() {
       localStorage.setItem("access_token", response.data.access_token);
       localStorage.setItem("refresh_token", response.data.refresh_token);
 
-      // Проверяем, что это именно администратор
+      // Проверяем, что это именно администратор (роль в API — "admin")
       const { data } = await api.get("/auth/me");
-      if (data?.role !== "ADMIN") {
+      if (String(data?.role).toLowerCase() !== "admin") {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
         setError("Эта учётная запись не имеет прав администратора");
