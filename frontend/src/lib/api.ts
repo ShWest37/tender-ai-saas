@@ -31,6 +31,12 @@ api.interceptors.response.use(
         window.location.href = '/auth/login'
       }
     }
+    // Демо-период/подписка закончились: сообщаем кабинету, чтобы показать тарифы
+    if (error.response?.status === 402) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('subscription:expired'))
+      }
+    }
     return Promise.reject(error)
   }
 )

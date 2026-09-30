@@ -1,6 +1,7 @@
 """
 Схемы заявок.
 ApplicationTenderBrief — вложенный объект tender, который рендерит /dashboard/applications.
+ApplicationDetail — полная карточка заявки для страницы AI-агента (с отчётом критика).
 """
 from datetime import datetime
 from typing import Optional
@@ -15,6 +16,9 @@ class ApplicationTenderBrief(BaseModel):
     title: str
     platform: Optional[str] = None
     initial_price: Optional[float] = None
+    law_type: Optional[str] = None
+    customer_name: Optional[str] = None
+    submission_deadline: Optional[datetime] = None
 
 
 class ApplicationOut(BaseModel):
@@ -28,6 +32,17 @@ class ApplicationOut(BaseModel):
     result_price: Optional[float] = None
     created_at: Optional[datetime] = None
     tender: Optional[ApplicationTenderBrief] = None
+
+
+class ApplicationDetail(ApplicationOut):
+    """Полная карточка заявки: контент, отчёты критика, статус подтверждения."""
+    generated_content: Optional[dict] = None
+    final_content: Optional[dict] = None
+    critic_report: Optional[dict] = None
+    deterministic_report: Optional[dict] = None
+    disclaimer_accepted: bool = False
+    review_confirmed_at: Optional[datetime] = None
+    review_notes: Optional[str] = None
 
 
 class ApplicationCreate(BaseModel):

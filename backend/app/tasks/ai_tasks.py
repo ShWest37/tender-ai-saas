@@ -8,7 +8,11 @@ from sqlalchemy import select
 from app.tasks.celery_app import celery_app, run_async
 from app.db.session import AsyncSessionLocal
 from app.db.models import Application, Tender, User, KnowledgeDocument
-from app.services.ai_service import generate_application, critique_application
+from app.services.ai_service import (
+    generate_application,
+    critique_application,
+    run_llm_critique,
+)
 from app.services.notification_service import dispatch_notification
 
 logger = logging.getLogger("app.tasks.ai")
@@ -32,7 +36,7 @@ def generate_application_task(self, user_id: int, tender_id: int, application_id
                 ).scalar_one_or_none()
 
             application = await generate_application(db, user, tender, application)
-            application = await critique_application(db, tender, application)
+            application = await critique_application(db, tender, application, user=user)
             await db.commit()
 
             await dispatch_notification(
@@ -52,6 +56,67 @@ def generate_application_task(self, user_id: int, tender_id: int, application_id
         return run_async(_job())
     except Exception as exc:  # noqa: BLE001
         logger.exception("generate_application_task failed, retrying")
+        raise self.retry(exc=exc, countdown=30)
+
+
+@celery_app.task(name="app.tasks.ai_tasks.critique_application_task", bind=True, max_retries=2)
+def critique_application_task(self, application_id: int):
+    """
+    LLM-этап AI-критика для одной заявки.
+
+    Детерминированные проверки к этому моменту уже выполнены синхронно в API
+    (быстрый ответ пользователю). Здесь остаётся только тяжёлая LLM-часть:
+    строгая проверка по «жёсткому» RAG, верификация цитат и уведомление.
+    """
+    async def _job():
+        async with AsyncSessionLocal() as db:
+            application = (
+                await db.execute(select(Application).where(Application.id == application_id))
+            ).scalar_one_or_none()
+            if application is None:
+                logger.warning("critique_application_task: application %s not found", application_id)
+                return None
+
+            tender = (
+                await db.execute(select(Tender).where(Tender.id == application.tender_id))
+            ).scalar_one_or_none()
+            if tender is None:
+                logger.warning("critique_application_task: tender for application %s not found", application_id)
+                return None
+
+            user = (
+                await db.execute(select(User).where(User.id == application.user_id))
+            ).scalar_one_or_none()
+
+            report = await run_llm_critique(db, tender, application, user=user)
+            await db.commit()
+
+            if user is not None:
+                admitted = bool(report.get("admitted"))
+                confidence = report.get("confidence")
+                confidence_text = f"{round(confidence * 100)}%" if confidence is not None else "—"
+                await dispatch_notification(
+                    db, user,
+                    notification_type="ai_critique_complete",
+                    title="AI завершил проверку заявки",
+                    body=(
+                        f"Заявка по тендеру «{tender.title}» проверена. "
+                        f"Уверенность: {confidence_text}. "
+                        + ("Замечаний нет — можно подтверждать проверку."
+                           if admitted else "Обнаружены замечания, требуется ручная проверка.")
+                    ),
+                    related_tender_id=tender.id,
+                    related_application_id=application.id,
+                    action_url=f"/dashboard/ai-agent?application_id={application.id}",
+                    action_label="Открыть отчёт",
+                    email_template="notification",
+                )
+            return application.id
+
+    try:
+        return run_async(_job())
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("critique_application_task failed, retrying")
         raise self.retry(exc=exc, countdown=30)
 
 

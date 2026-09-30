@@ -71,7 +71,10 @@ async def require_active_subscription(current_user: User = Depends(get_current_u
     """
     Доступ только при активной подписке или активном демо-периоде.
     Используется для платных действий (поиск тендеров, генерация заявок).
+    Администраторы работают без ограничения по подписке.
     """
+    if current_user.role == UserRole.ADMIN:
+        return current_user
     if not has_active_access(current_user):
         raise HTTPException(
             status_code=402,

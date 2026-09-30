@@ -4,7 +4,18 @@
 """
 from fastapi import APIRouter
 
-from app.api.routers import auth, tenders, applications, decisions, blog, payments, notifications, ai
+from app.api.routers import (
+    admin,
+    ai,
+    applications,
+    auth,
+    blog,
+    decisions,
+    notifications,
+    payments,
+    suppliers,
+    tenders,
+)
 
 api_router = APIRouter()
 
@@ -16,3 +27,5 @@ api_router.include_router(blog.router, prefix="/blog", tags=["blog"])
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 api_router.include_router(ai.router, prefix="/ai", tags=["ai"])
+api_router.include_router(suppliers.router, prefix="/suppliers", tags=["suppliers"])
+api_router.include_router(admin.router, prefix="/admin", tags=["admin"])

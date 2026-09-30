@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, Calendar, DollarSign, MapPin, Building, Loader2 } from "lucide-react";
+import { Search, Filter, Calendar, DollarSign, MapPin, Building, Loader2, Play } from "lucide-react";
 import { api } from "@/lib/api";
 import Link from "next/link";
 
@@ -18,14 +18,90 @@ interface Tender {
   status: string;
 }
 
+// Демо данные для тендеров
+const demoTenders: Tender[] = [
+  {
+    id: 1,
+    external_id: "T-001",
+    platform: "Сбербанк-АСТ",
+    title: "Поставка оборудования для лаборатории",
+    law_type: "44-FZ",
+    initial_price: 2500000,
+    region: "Москва",
+    customer_name: "ГБУ «Научный центр»",
+    submission_deadline: "2026-10-15",
+    status: "ACTIVE",
+  },
+  {
+    id: 2,
+    external_id: "T-002",
+    platform: "РТС-тендер",
+    title: "Ремонт здания администрации",
+    law_type: "44-FZ",
+    initial_price: 4800000,
+    region: "Санкт-Петербург",
+    customer_name: "Администрация района",
+    submission_deadline: "2026-10-20",
+    status: "ACTIVE",
+  },
+  {
+    id: 3,
+    external_id: "T-003",
+    platform: "Росэлторг",
+    title: "Поставка мебели для школы",
+    law_type: "223-FZ",
+    initial_price: 1200000,
+    region: "Казань",
+    customer_name: "Школа №45",
+    submission_deadline: "2026-10-10",
+    status: "ACTIVE",
+  },
+  {
+    id: 4,
+    external_id: "T-004",
+    platform: "ТЭК-Торг",
+    title: "Техническое обслуживание транспорта",
+    law_type: "44-FZ",
+    initial_price: 800000,
+    region: "Новосибирск",
+    customer_name: "Автопарк «Транс»",
+    submission_deadline: "2026-10-25",
+    status: "ACTIVE",
+  },
+  {
+    id: 5,
+    external_id: "T-005",
+    platform: "Газпромбанк",
+    title: "Поставка продуктов питания",
+    law_type: "223-FZ",
+    initial_price: 3500000,
+    region: "Екатеринбург",
+    customer_name: "Ресторан «Вкус»",
+    submission_deadline: "2026-10-12",
+    status: "ACTIVE",
+  },
+  {
+    id: 6,
+    external_id: "T-006",
+    platform: "ЕЭТП",
+    title: "Разработка программного обеспечения",
+    law_type: "44-FZ",
+    initial_price: 5600000,
+    region: "Москва",
+    customer_name: "Министерство цифрового развития",
+    submission_deadline: "2026-10-30",
+    status: "ACTIVE",
+  },
+];
+
 export default function TendersPage() {
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [lawType, setLawType] = useState("");
-  const [region, setRegion] = useState("");
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [isDemo, setIsDemo] = useState(false);
 
   const PAGE_SIZE = 20;
 
@@ -39,7 +115,6 @@ export default function TendersPage() {
       const params: any = { page, page_size: PAGE_SIZE };
       if (searchQuery) params.query = searchQuery;
       if (lawType) params.law_type = lawType;
-      if (region) params.region = region;
 
       const [tendersResp, countResp] = await Promise.all([
         api.get("/tenders", { params }),
@@ -47,8 +122,13 @@ export default function TendersPage() {
       ]);
       setTenders(tendersResp.data);
       setTotalCount(countResp.data.count || 0);
+      setIsDemo(false);
     } catch (error) {
       console.error("Error loading tenders:", error);
+      // Демо данные при ошибке
+      setTenders(demoTenders);
+      setTotalCount(demoTenders.length);
+      setIsDemo(true);
     } finally {
       setLoading(false);
     }
@@ -57,6 +137,13 @@ export default function TendersPage() {
   const handleSearch = () => {
     setPage(1);
     loadTenders();
+  };
+
+  const handleLoadDemo = () => {
+    setTenders(demoTenders);
+    setTotalCount(demoTenders.length);
+    setIsDemo(true);
+    setLoading(false);
   };
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
@@ -106,6 +193,17 @@ export default function TendersPage() {
         </div>
       </div>
 
+      {/* Демо кнопка */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleLoadDemo}
+          className="inline-flex items-center space-x-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <Play className="w-4 h-4" />
+          <span>Загрузить демо-данные</span>
+        </button>
+      </div>
+
       {/* Список тендеров */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -119,6 +217,11 @@ export default function TendersPage() {
         </div>
       ) : (
         <div className="space-y-4">
+          {isDemo && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+              Показаны демо-данные. Для получения реальных тендеров подключите API площадок.
+            </div>
+          )}
           {tenders.map((tender) => (
             <div
               key={tender.id}
@@ -161,19 +264,27 @@ export default function TendersPage() {
                     {tender.submission_deadline && (
                       <span className="flex items-center space-x-1">
                         <Calendar className="w-4 h-4" />
-                        <span>
-                          До {new Date(tender.submission_deadline).toLocaleDateString("ru-RU")}
-                        </span>
+                        <span>До {new Date(tender.submission_deadline).toLocaleDateString("ru-RU")}</span>
                       </span>
                     )}
                   </div>
                 </div>
-                <Link
-                  href={`/dashboard/ai-agent?tender_id=${tender.id}`}
-                  className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-shadow flex-shrink-0"
-                >
-                  AI-анализ
-                </Link>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-shrink-0">
+                  <Link
+                    href={`/dashboard/suppliers?tender_id=${tender.id}`}
+                    className="px-4 py-2 border border-blue-200 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center space-x-1.5 text-center"
+                    title="AI-поиск поставщиков с проверкой соответствия ТЗ, цене и срокам"
+                  >
+                    <span>🔍</span>
+                    <span>Найти поставщиков по этому ТЗ</span>
+                  </Link>
+                  <Link
+                    href={`/dashboard/ai-agent?tender_id=${tender.id}`}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-shadow flex-shrink-0 text-center"
+                  >
+                    AI-анализ
+                  </Link>
+                </div>
               </div>
             </div>
           ))}

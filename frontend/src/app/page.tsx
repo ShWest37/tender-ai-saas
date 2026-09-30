@@ -5,7 +5,7 @@ import { Comparison } from '@/components/home/Comparison'
 import { Benefits } from '@/components/home/Benefits'
 import { UIPTypes } from '@/components/home/UIPTypes'
 import { PricingCards } from '@/components/home/PricingCards'
-import { PlatformSlider } from '@/components/home/PlatformSlider'
+import { FAQ } from '@/components/home/FAQ'
 import { CTASection } from '@/components/home/CTASection'
 import { BlogPreview } from '@/components/home/BlogPreview'
 import { Footer } from '@/components/layout/Footer'
@@ -53,10 +53,10 @@ export default function HomePage() {
           </div>
         </section>
         
-        {/* Раздел 7: Площадки (слайдер) */}
-        <section id="platforms" className="py-16 bg-white">
+        {/* Раздел 7: FAQ */}
+        <section id="faq" className="py-20 bg-white">
           <div className="container mx-auto px-4">
-            <PlatformSlider />
+            <FAQ />
           </div>
         </section>
         

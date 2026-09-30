@@ -46,6 +46,10 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email уже зарегистрирован")
 
     now = datetime.now(timezone.utc)
+    # Демо-доступ на DEMO_DAYS дней без карты (значение может менять админ)
+    from app.services.app_settings import get_demo_days
+
+    demo_days = await get_demo_days(db)
     user = User(
         email=payload.email,
         hashed_password=get_password_hash(payload.password),
@@ -54,8 +58,7 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
         inn=payload.inn,
         role=UserRole.USER,
         is_active=True,
-        # Демо-доступ на DEMO_DAYS дней без карты
-        demo_expires_at=now + timedelta(days=settings.DEMO_DAYS),
+        demo_expires_at=now + timedelta(days=demo_days),
     )
     db.add(user)
     await db.flush()

@@ -1,16 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, Lock, Award, Loader2 } from "lucide-react";
+import { Mail, Lock, Award, Loader2, CheckCircle } from "lucide-react";
 import { api } from "@/lib/api";
+import { HomeLink } from "@/components/layout/LogoutButton";
 
 export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [loggedOut, setLoggedOut] = useState(false);
+
+  // Выход из кабинета (?logout=1) — подсвечиваем, что сессия завершена
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("logout") === "1") setLoggedOut(true);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +52,13 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Вход в систему</h1>
           <p className="text-gray-500 mb-6">Введите данные для доступа к кабинету</p>
+
+          {loggedOut && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-start space-x-2">
+              <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>Вы вышли из личного кабинета. Войдите снова, чтобы продолжить работу.</span>
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
@@ -101,6 +116,10 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <HomeLink className="w-full" />
+          </div>
 
           <p className="mt-6 text-center text-sm text-gray-600">
             Нет аккаунта?{" "}

@@ -62,6 +62,7 @@ class NotificationType(str, enum.Enum):
     PAYMENT_SUCCESS = "payment_success"
     DEMO_EXPIRING = "demo_expiring"
     AI_GENERATION_COMPLETE = "ai_generation_complete"
+    AI_CRITIQUE_COMPLETE = "ai_critique_complete"
 
 
 class User(Base):
@@ -124,6 +125,14 @@ class Application(Base):
     final_content = Column(JSON)
     ai_confidence_score = Column(Float)
     critic_report = Column(JSON)
+    # Результат детерминированных (не-LLM) проверок заявки.
+    deterministic_report = Column(JSON)
+    # Юридический дисклеймер: пользователь подтвердил проверку данных вручную.
+    disclaimer_accepted = Column(Boolean, default=False)
+    review_confirmed_at = Column(DateTime(timezone=True), nullable=True)
+    # ID пользователя, подтвердившего проверку (без FK, чтобы не плодить связи на users).
+    review_confirmed_by = Column(Integer, nullable=True)
+    review_notes = Column(Text, nullable=True)
     submitted_at = Column(DateTime(timezone=True), nullable=True)
     result_price = Column(Float, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
@@ -154,6 +163,8 @@ class BlogPost(Base):
     excerpt = Column(Text)
     content = Column(Text, nullable=False)
     cover_image_url = Column(String(500), nullable=True)
+    # Рубрика — структурирует блог (фильтры на странице /blog)
+    category = Column(String(100), nullable=True)
     is_published = Column(Boolean, default=False)
     author_id = Column(Integer, ForeignKey("users.id"))
     published_at = Column(DateTime(timezone=True), nullable=True)
@@ -298,3 +309,78 @@ class KnowledgeDocument(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="knowledge_documents")
+
+
+class AppSetting(Base):
+    """
+    Глобальные настройки приложения (ключ → JSON-значение).
+    Например: default_category, site_name, demo_days.
+    """
+    __tablename__ = "app_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String(100), unique=True, index=True, nullable=False)
+    value_json = Column(JSON, nullable=True)
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
+class SupplierSource(Base):
+    """
+    Источник прайс-листа поставщика / B2B-агрегатора.
+
+    source_type:
+    - api   — открытый API агрегатора (JSON по api_url);
+    - csv   — открытый прайс-лист CSV/TXT по price_list_url;
+    - xlsx  — открытый прайс-лист Excel по price_list_url;
+    - json  — открытый прайс-лист JSON по price_list_url;
+    - demo  — встроенный демо-каталог (работает без сети).
+    """
+    __tablename__ = "supplier_sources"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String(100), unique=True, index=True, nullable=False)
+    name = Column(String(255), nullable=False)
+    supplier_name = Column(String(255))          # как поставщик показывается в таблице
+    source_type = Column(String(20), default="csv")
+    category = Column(String(100), nullable=True)   # id категории из app/services/categories.py
+    website = Column(String(500), nullable=True)
+    price_list_url = Column(Text, nullable=True) # открытый прайс (Excel/CSV)
+    api_url = Column(Text, nullable=True)        # открытый API
+    api_key = Column(String(500), nullable=True)
+    currency = Column(String(10), default="RUB")
+    default_delivery_days = Column(Integer, default=5)
+    is_active = Column(Boolean, default=True)
+    last_sync_at = Column(DateTime(timezone=True), nullable=True)
+    last_error = Column(Text, nullable=True)
+    offers_count = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    offers = relationship("SupplierOffer", back_populates="source", cascade="all, delete-orphan")
+
+
+class SupplierOffer(Base):
+    """Строка прайс-листа поставщика (позиция для сопоставления с ТЗ тендера)."""
+    __tablename__ = "supplier_offers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    source_id = Column(Integer, ForeignKey("supplier_sources.id"), index=True, nullable=False)
+    supplier_name = Column(String(255), nullable=False)
+    sku = Column(String(100), nullable=True)
+    title = Column(String(500), nullable=False)
+    description = Column(Text, nullable=True)
+    specs = Column(JSON, nullable=True)          # {"ОЗУ": "16 ГБ", ...}
+    price = Column(Float, nullable=True)
+    unit = Column(String(50), default="шт")
+    stock = Column(Integer, nullable=True)       # None = не указано
+    delivery_days = Column(Integer, nullable=True)
+    url = Column(String(1000), nullable=True)
+    category = Column(String(100), nullable=True)
+    is_demo = Column(Boolean, default=False)     # данные из встроенного демо-каталога
+    raw_data = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    source = relationship("SupplierSource", back_populates="offers")

@@ -34,6 +34,8 @@ CHANNEL_FIELD_BY_TYPE: dict[str, str] = {
     NotificationType.PAYMENT_SUCCESS.value: "payment_success_channel",
     NotificationType.DEMO_EXPIRING.value: "demo_expiring_channel",
     NotificationType.AI_GENERATION_COMPLETE.value: "ai_generation_complete_channel",
+    # Критик и генерация — части одного AI-процесса, используют один канал настроек.
+    NotificationType.AI_CRITIQUE_COMPLETE.value: "ai_generation_complete_channel",
 }
 
 

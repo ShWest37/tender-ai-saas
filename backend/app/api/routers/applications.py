@@ -9,10 +9,33 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.db.models import Application, Tender, User, ApplicationStatus
-from app.core.dependencies import get_current_user
-from app.schemas.application import ApplicationOut, ApplicationCreate, ApplicationUpdate
+from app.core.dependencies import get_current_user, require_active_subscription
+from app.schemas.application import (
+    ApplicationOut,
+    ApplicationDetail,
+    ApplicationCreate,
+    ApplicationUpdate,
+)
 
 router = APIRouter()
+
+
+@router.get("/{application_id}", response_model=ApplicationDetail)
+async def get_application(
+    application_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Полная карточка заявки для страницы AI-агента (контент + отчёты критика)."""
+    stmt = (
+        select(Application)
+        .where(Application.id == application_id, Application.user_id == current_user.id)
+        .options(selectinload(Application.tender))
+    )
+    app = (await db.execute(stmt)).scalar_one_or_none()
+    if app is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Заявка не найдена")
+    return app
 
 
 @router.get("", response_model=list[ApplicationOut])
@@ -34,7 +57,7 @@ async def list_applications(
 async def create_application(
     payload: ApplicationCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_active_subscription),
 ):
     """Создаёт черновик заявки под тендер. Дальше его заполняет AI-агент."""
     tender = (await db.execute(select(Tender).where(Tender.id == payload.tender_id))).scalar_one_or_none()
@@ -56,7 +79,7 @@ async def update_application(
     application_id: int,
     payload: ApplicationUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_active_subscription),
 ):
     stmt = (
         select(Application)

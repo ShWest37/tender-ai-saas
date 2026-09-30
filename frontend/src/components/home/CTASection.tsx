@@ -7,9 +7,10 @@ export function CTASection() {
   return (
     <div className="text-center text-white">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
       >
         <h2 className="text-3xl md:text-5xl font-bold mb-6">
           Готовы выигрывать больше тендеров?

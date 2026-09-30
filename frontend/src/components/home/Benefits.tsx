@@ -30,28 +30,59 @@ const benefits = [
   },
 ]
 
+const itemVariantsLeft = {
+  hidden: { opacity: 0, x: -50 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.6, ease: 'easeOut' },
+  },
+}
+
+const itemVariantsRight = {
+  hidden: { opacity: 0, x: 50 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.6, ease: 'easeOut' },
+  },
+}
+
 export function Benefits() {
   return (
     <div>
       <div className="text-center mb-16">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+        >
           Преимущества <span className="gradient-text">автоматизации</span>
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.1 }}
+          className="text-lg text-gray-600 max-w-2xl mx-auto"
+        >
           Реальные результаты наших клиентов
-        </p>
+        </motion.p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {benefits.map((benefit, index) => {
           const Icon = benefit.icon
+          const variants = index % 2 === 0 ? itemVariantsLeft : itemVariantsRight
+
           return (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              variants={variants}
+              initial="hidden"
+              whileInView="visible"
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
               className="text-center p-6"
             >
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4">

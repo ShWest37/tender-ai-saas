@@ -83,6 +83,17 @@ async def _process_payment_event(data: dict) -> None:
         user = (await db.execute(select(User).where(User.id == payment.user_id))).scalar_one_or_none()
         if user is not None:
             await activate_or_extend(user, payment.plan, db)
+            # Отправляем уведомления на почту пользователю и администратору
+            try:
+                from app.services.payment_notification import send_payment_notification
+                await send_payment_notification(
+                    user_email=user.email,
+                    admin_email=settings.ADMIN_EMAIL,
+                    plan=payment.plan.value,
+                    amount=payment.amount,
+                )
+            except Exception as e:
+                logger.error("Failed to send payment notification: %s", e)
         await db.commit()
 
 

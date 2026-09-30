@@ -5,7 +5,7 @@ const footerLinks = {
   product: [
     { href: '#features', label: 'Возможности' },
     { href: '#pricing', label: 'Тарифы' },
-    { href: '#platforms', label: 'Площадки' },
+    { href: '#faq', label: 'FAQ' },
     { href: '/blog', label: 'Блог' },
   ],
   company: [

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Calendar, User } from "lucide-react";
+import { ArrowLeft, Calendar, Tag, User } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -16,6 +16,7 @@ interface BlogPost {
   excerpt: string | null;
   content: string;
   cover_image_url: string | null;
+  category?: string | null;
   published_at: string | null;
 }
 
@@ -43,7 +44,8 @@ export default function BlogPostPage() {
 
   return (
     <>
-      <Header />
+      {/* Верхнее меню всегда отображается и на странице статьи */}
+      <Header forceSolid />
       <main className="min-h-screen bg-white pt-24 pb-16">
         <article className="container mx-auto px-4 max-w-3xl">
           <Link
@@ -84,6 +86,12 @@ export default function BlogPostPage() {
             <>
               {/* Заголовок */}
               <header className="mb-8">
+                {post.category && (
+                  <span className="inline-flex items-center space-x-1 px-3 py-1 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full mb-4">
+                    <Tag className="w-3 h-3" />
+                    <span>{post.category}</span>
+                  </span>
+                )}
                 <h1 className="text-4xl font-bold text-gray-900 mb-4 leading-tight">
                   {post.title}
                 </h1>
