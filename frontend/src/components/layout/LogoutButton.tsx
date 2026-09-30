@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { LogOut, Home } from "lucide-react";
 
 interface LogoutButtonProps {
@@ -27,6 +28,23 @@ export function LogoutButton({
 
   const isDark = tone === "dark";
 
+  // Модалку рендерим portal-ом в document.body: сайдбар имеет transform
+  // (translate-x-*), из-за которого fixed-элементы позиционируются относительно
+  // меню, а не экрана. Плюс блокируем скролл фона и закрываем по Escape.
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
   const handleConfirm = () => {
     try {
       localStorage.removeItem("access_token");
@@ -52,56 +70,59 @@ export function LogoutButton({
         <span className="font-medium">{label}</span>
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setOpen(false)}
-        >
+      {open &&
+        createPortal(
           <div
-            className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 sm:p-8"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm lg:pl-64"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Выход из личного кабинета"
+            onClick={() => setOpen(false)}
           >
             <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${
-                isDark ? "bg-red-100 text-red-600" : "bg-red-100 text-red-600"
-              }`}
+              className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 sm:p-8"
+              onClick={(e) => e.stopPropagation()}
             >
-              <LogOut className="w-6 h-6" />
-            </div>
-
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Вы действительно хотите выйти из личного кабинета?
-            </h3>
-            <p className="text-sm text-gray-500 mb-6">
-              Несохранённые изменения будут потеряны. Для входа потребуется указать email и пароль.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                type="button"
-                onClick={handleConfirm}
-                className="flex-1 inline-flex items-center justify-center space-x-2 px-5 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+              <div
+                className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${
+                  isDark ? "bg-red-100 text-red-600" : "bg-red-100 text-red-600"
+                }`}
               >
-                <span>Да, выйти</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="flex-1 px-5 py-3 border border-gray-200 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Отмена
-              </button>
-            </div>
+                <LogOut className="w-6 h-6" />
+              </div>
 
-            <p className="mt-4 text-center text-xs text-gray-400">
-              После выхода откроется окно авторизации — можно войти снова или перейти на главную
-              страницу сайта.
-            </p>
-          </div>
-        </div>
-      )}
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Вы действительно хотите выйти из личного кабинета?
+              </h3>
+              <p className="text-sm text-gray-500 mb-6">
+                Несохранённые изменения будут потеряны. Для входа потребуется указать email и пароль.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={handleConfirm}
+                  className="flex-1 inline-flex items-center justify-center space-x-2 px-5 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                >
+                  <span>Да, выйти</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="flex-1 px-5 py-3 border border-gray-200 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Отмена
+                </button>
+              </div>
+
+              <p className="mt-4 text-center text-xs text-gray-400">
+                После выхода откроется окно авторизации — можно войти снова или перейти на главную
+                страницу сайта.
+              </p>
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   );
 }

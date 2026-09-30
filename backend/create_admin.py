@@ -14,7 +14,7 @@ DATABASE_URL = os.getenv(
     "postgresql+asyncpg://tender_user:tender_password@localhost:5432/tender_db"
 )
 
-ADMIN_EMAIL = "admin@tenderai.ru"
+ADMIN_EMAIL = "admin@bidflow.ru"
 ADMIN_PASSWORD = "admin123"
 
 

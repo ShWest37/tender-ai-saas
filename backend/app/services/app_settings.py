@@ -57,8 +57,8 @@ async def load_admin_settings(db: AsyncSession) -> dict[str, Any]:
     settings = get_settings()
     defaults: dict[str, Any] = {
         "site_name": "Tender AI Director",
-        "support_email": "support@tenderai.ru",
-        "admin_email": "admin@tenderai.ru",
+        "support_email": "support@bidflow.ru",
+        "admin_email": "admin@bidflow.ru",
         "demo_days": settings.DEMO_DAYS,
         "parsing_interval": 15,
         "email_notifications": True,

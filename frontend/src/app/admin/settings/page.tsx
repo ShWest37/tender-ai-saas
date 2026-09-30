@@ -25,8 +25,8 @@ const DEFAULT_CATEGORIES: Category[] = [
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState({
     site_name: "Tender AI Director",
-    support_email: "support@tenderai.ru",
-    admin_email: "admin@tenderai.ru",
+    support_email: "support@bidflow.ru",
+    admin_email: "admin@bidflow.ru",
     demo_days: 3,
     parsing_interval: 15,
     email_notifications: true,
